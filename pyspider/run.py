@@ -300,7 +300,7 @@ def result_worker(ctx, result_cls):
               help='username of lock -ed projects')
 @click.option('--password', envvar='WEBUI_PASSWORD',
               help='password of lock -ed projects')
-@click.option('--need-auth', is_flag=True, default=False, help='need username and password')
+@click.option('--need-auth', is_flag=True, default=True, help='need username and password')
 @click.option('--webui-instance', default='pyspider.webui.app.app', callback=load_cls,
               help='webui Flask Application instance to be used.')
 @click.pass_context
