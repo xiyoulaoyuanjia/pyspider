@@ -266,8 +266,8 @@ def processor(ctx, processor_cls, enable_stdout_capture=True):
 
 
 @cli.command()
-@click.option('--result-cls', default='pyspider.result.ResultWorker', callback=load_cls,
-              help='ResultWorker class to be used.')
+@click.option('--result-cls', default='pyspider.result.result_worker_watoo.ResultWorkerWatoo', callback=load_cls, help='ResultWorker class to be used.')
+#@click.option('--result-cls', default='pyspider.result.ResultWorker', callback=load_cls, help='ResultWorker class to be used.')
 @click.pass_context
 def result_worker(ctx, result_cls):
     """
