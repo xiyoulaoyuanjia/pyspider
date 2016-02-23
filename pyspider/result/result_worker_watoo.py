@@ -111,7 +111,8 @@ class ResultWorkerWatoo(ResultWorker):
         self.ftpClinetUpload(result['name'])
 
         _now_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        _sql = "insert into Pic_Temp_Process(Pic_Name, Pic_Width,Pic_Height, AuditStatus, UpdatedDate,CreatedDate, UserReplyCount, Audit_ErrorIndex, AvgColor, OriginalName, SourceUrl) values('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s') " % (result['name'], pic_width, pic_height, '0', _now_time, _now_time , '0', '0',avg_color, result['orginal_name'], result['source_url'].encode('utf-8'))
+        _sql_name = time.strftime('%Y%m%d/') + result['name']
+        _sql = "insert into Pic_Temp_Process(Pic_Name, Pic_Width,Pic_Height, AuditStatus, UpdatedDate,CreatedDate, UserReplyCount, Audit_ErrorIndex, AvgColor, OriginalName, SourceUrl) values('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s') " % (_sql_name, pic_width, pic_height, '0', _now_time, _now_time , '0', '0',avg_color, result['orginal_name'], result['source_url'].encode('utf-8'))
 
         self.pymssqlClinetOp(_sql)
 
