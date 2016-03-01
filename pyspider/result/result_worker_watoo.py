@@ -11,6 +11,7 @@ import time
 
 import cv2
 from ftplib import FTP
+import ftplib
 import pymssql
 logger = logging.getLogger("ResultWorkerWatoo")
 
