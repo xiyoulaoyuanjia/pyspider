@@ -43,7 +43,7 @@ class ResultWorkerWatoo(ResultWorker):
         self.pymssqlClinet = self.pymssqlClinetInit();
 
     def  pymssqlClinetInit(self):
-        conn = pymssql.connect(host="115.28.80.218",user="newuser",password= "@123456#",database= "WatuMeiDa",charset="utf8")
+        conn = pymssql.connect(host="10.163.169.69",user="newuser",password= "@123456#",database= "WatuMeiDa",charset="utf8")
         return conn
 
     def pymssqlClinetOp(self,sql):
@@ -69,7 +69,7 @@ class ResultWorkerWatoo(ResultWorker):
             self.ftpClinet.dir()
         except ftplib.error_temp as e: #421 Connection timed out
             logger.warning("Connection timed out and retry Connection")
-            self.ftpClinet = ftpClinetInit();
+            self.ftpClinet = self.ftpClinetInit();
 
         try:
             self.ftpClinet.cwd("/"+name[0:8])
