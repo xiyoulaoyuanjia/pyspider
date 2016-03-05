@@ -75,7 +75,7 @@ class ResultWorkerWatoo(ResultWorker):
             self.ftpClinet.cwd("/"+name[0:8])
         except ftplib.error_perm as e: # 550 CWD failed.
             logger.warning("cwd failed and  retry mkdir")
-            self.ftpClinet.mkd(name[0:8])
+            self.ftpClinet.mkd("/"+name[0:8])
             self.ftpClinet.cwd("/"+name[0:8])
 
 
