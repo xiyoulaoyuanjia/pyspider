@@ -59,14 +59,25 @@ class ResultWorkerWatoo(ResultWorker):
 
     def ftpClinetInit(self):
         ftp=FTP()
-        ftp.set_debuglevel(0)
-        ftp.connect('115.28.80.218','20')
-        ftp.login('newuser','@123456#')
+        retry = True
+        retryNum = 1
+        ## retry until success
+        while(retry):
+             try:
+                 ftp.set_debuglevel(0)
+                 ftp.connect('115.28.80.218','20')
+                 ftp.login('newuser','@123456#')
+                 retry = False
+             except:
+                 import time
+                 time.sleep(10*retryNum)
+                 retryNum += 1
+
         return ftp
 
     def ftpClinetUpload(self, name):
         try:
-            self.ftpClinet.dir()
+            self.ftpClinet.voidcmd("NOOP")
         except ftplib.error_temp as e: #421 Connection timed out
             logger.warning("Connection timed out and retry Connection")
             self.ftpClinet = self.ftpClinetInit();
