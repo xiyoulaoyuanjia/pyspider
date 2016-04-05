@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>watoo results Dashboard</title>
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <meta name="description" content="watoo results Dashboard">
+    <meta name="author" content="xiyoulaoyuanjia">
+
+
+    <link href="{{ url_for('cdn', path='twitter-bootstrap/3.1.1/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('cdn', path='x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css') }}" rel="stylesheet">
+    <link href="{{ url_for('cdn', path='sortable/0.6.0/css/sortable-theme-bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='result_watoo.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('cdn', path='jquery/1.11.0/jquery.min.js') }}"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>挖兔美哒 dashboard</h1>
+    </header>
+    <section>
+      <table class="table sortable-theme-bootstrap projects">
+        <thead>
+          <tr>
+            <th width="10%">project name</th>
+            <th>Results</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+          <tr data-name="{{ project['name'] }}">
+            <td class="project-name"><a>{{ project['group'] or '' }}</a></td>
+            <td class="project-progress progress-1day">
+              <div class="progress">
+                <div class="progress-text">1 day</div>
+                <div class="progress-bar progress-pending"></div>
+                <div class="progress-bar progress-bar-success progress-success"></div>
+                <div class="progress-bar progress-bar-warning progress-retry"></div>
+                <div class="progress-bar progress-bar-danger progress-failed"></div>
+              </div>
+            </td>
+            <td class="project-progress progress-1week">
+              <div class="progress">
+                <div class="progress-text">1 week</div>
+                <div class="progress-bar progress-pending"></div>
+                <div class="progress-bar progress-bar-success progress-success"></div>
+                <div class="progress-bar progress-bar-warning progress-retry"></div>
+                <div class="progress-bar progress-bar-danger progress-failed"></div>
+              </div>
+            </td>
+            <td class="project-progress progress-1month">
+              <div class="progress">
+                <div class="progress-text">1 month</div>
+                <div class="progress-bar progress-pending"></div>
+                <div class="progress-bar progress-bar-success progress-success"></div>
+                <div class="progress-bar progress-bar-warning progress-retry"></div>
+                <div class="progress-bar progress-bar-danger progress-failed"></div>
+              </div>
+            </td>
+
+            <td class="project-progress progress-1year">
+              <div class="progress">
+                <div class="progress-text">1 year</div>
+                <div class="progress-bar progress-pending"></div>
+                <div class="progress-bar progress-bar-success progress-success"></div>
+                <div class="progress-bar progress-bar-warning progress-retry"></div>
+                <div class="progress-bar progress-bar-danger progress-failed"></div>
+              </div>
+            </td>
+
+            <td class="project-progress progress-all">
+              <div class="progress">
+                <div class="progress-text">all</div>
+                <div class="progress-bar progress-pending"></div>
+                <div class="progress-bar progress-bar-success progress-success"></div>
+                <div class="progress-bar progress-bar-warning progress-retry"></div>
+                <div class="progress-bar progress-bar-danger progress-failed"></div>
+              </div>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </section>
+    <script src="{{ url_for('cdn', path='twitter-bootstrap/3.1.1/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('cdn', path='x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js') }}"></script>
+    <script src="{{ url_for('cdn', path='sortable/0.6.0/js/sortable.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='result_watoo.js') }}"></script>
+  </body>
+</html>
+<!-- vim: set et sw=2 ts=2 sts=2 ff=unix fenc=utf8 syntax=htmldjango: -->

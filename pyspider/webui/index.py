@@ -13,12 +13,18 @@ from .app import app
 
 index_fields = ['name', 'group', 'status', 'comments', 'rate', 'burst', 'updatetime']
 
-
-@app.route('/')
+@app.route('/index')
 def index():
     projectdb = app.config['projectdb']
 
     return render_template("index.html", projects=projectdb.get_all(fields=index_fields))
+
+@app.route('/results/watoo')
+def results_watoo():
+    projectdb = app.config['projectdb']
+
+    return render_template("result_watoo.html", projects=projectdb.get_all(fields=index_fields))
+
 
 
 @app.route('/queues')

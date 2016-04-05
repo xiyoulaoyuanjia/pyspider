@@ -265,12 +265,14 @@ def processor(ctx, processor_cls, enable_stdout_capture=True):
 
     processor.run()
 
-
 @cli.command()
+@click.option('--xmlrpc/--no-xmlrpc', default=True)
+@click.option('--xmlrpc-host', default='0.0.0.0')
+@click.option('--xmlrpc-port', default=26666)
 @click.option('--result-cls', default='pyspider.result.result_worker_watoo.ResultWorkerWatoo', callback=load_cls, help='ResultWorker class to be used.')
 #@click.option('--result-cls', default='pyspider.result.ResultWorker', callback=load_cls, help='ResultWorker class to be used.')
 @click.pass_context
-def result_worker(ctx, result_cls):
+def result_worker(ctx,xmlrpc, xmlrpc_host, xmlrpc_port ,result_cls):
     """
     Run result worker.
     """
@@ -283,6 +285,9 @@ def result_worker(ctx, result_cls):
     if g.get('testing_mode'):
         return result_worker
 
+    if xmlrpc:
+        utils.run_in_thread(result_worker.xmlrpc_run, port=xmlrpc_port, bind=xmlrpc_host)
+
     result_worker.run()
 
 
@@ -294,6 +299,7 @@ def result_worker(ctx, result_cls):
 @click.option('--cdn', default='//cdnjscn.b0.upaiyun.com/libs/',
               help='js/css cdn server')
 @click.option('--scheduler-rpc', help='xmlrpc path of scheduler')
+@click.option('--result_rpc', help='xmlrpc path of result')
 @click.option('--fetcher-rpc', help='xmlrpc path of fetcher')
 @click.option('--max-rate', type=float, help='max rate for each project')
 @click.option('--max-burst', type=float, help='max burst for each project')
@@ -305,7 +311,7 @@ def result_worker(ctx, result_cls):
 @click.option('--webui-instance', default='pyspider.webui.app.app', callback=load_cls,
               help='webui Flask Application instance to be used.')
 @click.pass_context
-def webui(ctx, host, port, cdn, scheduler_rpc, fetcher_rpc, max_rate, max_burst,
+def webui(ctx, host, port, cdn, scheduler_rpc,result_rpc, fetcher_rpc, max_rate, max_burst,
           username, password, need_auth, webui_instance):
     """
     Run WebUI
@@ -363,6 +369,11 @@ def webui(ctx, host, port, cdn, scheduler_rpc, fetcher_rpc, max_rate, max_burst,
         app.config['scheduler_rpc'] = connect_rpc(ctx, None, 'http://127.0.0.1:23333/')
     else:
         app.config['scheduler_rpc'] = scheduler_rpc
+
+    if isinstance(result_rpc, six.string_types):
+        result_rpc = connect_rpc(ctx, None, result_rpc)
+        app.config['result_rpc'] = result_rpc
+
 
     app.debug = g.debug
     g.instances.append(app)
@@ -480,6 +491,10 @@ def all(ctx, fetcher_num, processor_num, result_worker_num, run_in):
         webui_config = g.config.get('webui', {})
         webui_config.setdefault('scheduler_rpc', 'http://127.0.0.1:%s/'
                                 % g.config.get('scheduler', {}).get('xmlrpc_port', 23333))
+
+        webui_config.setdefault('result_rpc', 'http://127.0.0.1:%s/'
+                                % g.config.get('result', {}).get('xmlrpc_port', 26666))
+
         ctx.invoke(webui, **webui_config)
     finally:
         # exit components run in threading

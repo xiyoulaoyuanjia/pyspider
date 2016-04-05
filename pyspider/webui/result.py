@@ -11,7 +11,7 @@ from flask import render_template, request, json
 from flask import Response
 from .app import app
 from pyspider.libs import result_dump
-
+import socket
 
 @app.route('/results')
 def result():
@@ -52,3 +52,34 @@ def dump_result(project, _format):
     elif _format == 'csv':
         return Response(result_dump.dump_as_csv(results),
                         mimetype='text/csv')
+
+@app.route('/results/counter')
+def results_counter():
+      rpc = app.config['result_rpc']
+      if rpc is None:
+          return json.dumps({})
+
+      result = {}
+      try:
+          for project, counter in rpc.counter('5m_time', 'avg').items():
+              result.setdefault(project, {})['5m_time'] = counter
+          for project, counter in rpc.counter('5m', 'sum').items():
+              result.setdefault(project, {})['5m'] = counter
+          for project, counter in rpc.counter('1h', 'sum').items():
+              result.setdefault(project, {})['1h'] = counter
+          for project, counter in rpc.counter('1day', 'sum').items():
+              result.setdefault(project, {})['1day'] = counter
+          for project, counter in rpc.counter('1week', 'sum').items():
+              result.setdefault(project, {})['1week'] = counter
+          for project, counter in rpc.counter('1month', 'sum').items():
+              result.setdefault(project, {})['1month'] = counter
+          for project, counter in rpc.counter('1year', 'sum').items():
+              result.setdefault(project, {})['1year'] = counter
+          for project, counter in rpc.counter('all', 'sum').items():
+              result.setdefault(project, {})['all'] = counter
+      except socket.error as e:
+          app.logger.warning('connect to scheduler rpc error: %r', e)
+          return json.dumps({}), 200, {'Content-Type': 'application/json'}
+
+      return json.dumps(result), 200, {'Content-Type': 'application/json'}
+        

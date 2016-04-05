@@ -4,6 +4,9 @@
 # Author: xiyoulaoyuanjia
 # Created on 2015-12-07 22:56:19
 from pyspider.result import ResultWorker
+from pyspider.libs import counter, utils
+import os
+
 import json
 import logging
 import io
@@ -41,6 +44,39 @@ class ResultWorkerWatoo(ResultWorker):
         super(ResultWorkerWatoo,self).__init__(resultdb,inqueue)
         self.ftpClinet = self.ftpClinetInit();
         self.pymssqlClinet = self.pymssqlClinetInit();
+        self.data_path='./data'
+        self._quit = False
+        self._cnt = {
+            "5m_time": counter.CounterManager(
+                lambda: counter.TimebaseAverageEventCounter(30, 10)),
+            "5m": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(30, 10)),
+            "1h": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(60, 60)),
+
+            "1day": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(10 * 60, 24 * 6)),
+            ## 1 week
+            "1week": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(10 * 60 * 7, 24 * 6)),
+            ##  1 month ~ 30week
+            "1month": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(10 * 60 * 7 * 30, 24 * 6)),
+            ##  1 year
+            "1year": counter.CounterManager(
+                lambda: counter.TimebaseAverageWindowCounter(10 * 60 * 7 * 30 * 12, 24 * 6)),
+            "all": counter.CounterManager(
+                lambda: counter.TotalCounter()),
+        }   
+        self._cnt['1h'].load(os.path.join(self.data_path, 'result_watoo.1h'))
+        self._cnt['1day'].load(os.path.join(self.data_path, 'result_watoo.1day'))
+        self._cnt['1week'].load(os.path.join(self.data_path, 'result_watoo.1week'))
+        self._cnt['1month'].load(os.path.join(self.data_path, 'result_watoo.1month'))
+        self._cnt['1year'].load(os.path.join(self.data_path, 'result_watoo.1year'))
+
+        self._cnt['all'].load(os.path.join(self.data_path, 'result_watoo.all'))
+        self._last_dump_cnt = 0
+
 
     def  pymssqlClinetInit(self):
         conn = pymssql.connect(host="10.163.169.69",user="newuser",password= "@123456#",database= "WatuMeiDa",charset="utf8")
@@ -112,6 +148,42 @@ class ResultWorkerWatoo(ResultWorker):
             logger.info("解析jpg图片,获取图片相关信息(长,宽,rbg均色) 分别为 :" + str(_height) + "," + str(_width) + "," + str(_avg_color) )
             return (str(_avg_color), str(_width), str(_height))
 
+    def _dump_cnt(self):
+        '''Dump counters to file'''
+        self._cnt['1h'].dump(os.path.join(self.data_path, 'result_watoo.1h'))
+        self._cnt['1day'].dump(os.path.join(self.data_path, 'result_watoo.1day'))
+        self._cnt['1week'].dump(os.path.join(self.data_path, 'result_watoo.1week'))
+        self._cnt['1month'].dump(os.path.join(self.data_path, 'result_watoo.1month'))
+        self._cnt['1year'].dump(os.path.join(self.data_path, 'result_watoo.1year'))
+
+        self._cnt['all'].dump(os.path.join(self.data_path, 'result_watoo.all'))
+
+    def _try_dump_cnt(self):
+        '''Dump counters every 60 seconds'''
+        now = time.time()
+        if now - self._last_dump_cnt > 60:
+            self._last_dump_cnt = now
+            self._dump_cnt()
+            #self._print_counter_log()
+
+    ## when a new result arrivel
+    def _on_new_request(self, task, result):
+
+        project = task['project']
+        self._cnt['5m'].event((project, 'success'), +1)
+        self._cnt['1h'].event((project, 'success'), +1)
+        self._cnt['1day'].event((project, 'success'), +1)
+        self._cnt['1week'].event((project, 'success'), +1)
+        self._cnt['1month'].event((project, 'success'), +1)
+        self._cnt['1year'].event((project, 'success'), +1)
+        self._cnt['all'].event((project, 'success'), +1)
+
+        self._try_dump_cnt()
+
+        logger.info('new result %(project)s:%(taskid)s %(url)s', task)
+
+
+
     def on_result(self, task, result):
         ## I must get the result from webui
         logger.info('task ->  %s'  %  task)
@@ -127,9 +199,41 @@ class ResultWorkerWatoo(ResultWorker):
         _sql = "insert into Pic_Temp_Process(Pic_Name, Pic_Width,Pic_Height, AuditStatus, UpdatedDate,CreatedDate, UserReplyCount, Audit_ErrorIndex, AvgColor, OriginalName, SourceUrl) values('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s') " % (_sql_name, pic_width, pic_height, '0', _now_time, _now_time , '0', '0',avg_color, result['orginal_name'], result['source_url'].encode('utf-8'))
 
         self.pymssqlClinetOp(_sql)
-
+        self._on_new_request(task,result)        
         ResultWorker.on_result(self, task, result)
 
+    def quit(self):
+        '''Set quit signal'''
+        self._quit = True
 
+    def xmlrpc_run(self, port=26666, bind='127.0.0.1', logRequests=False):
+            '''Start xmlrpc interface'''
+            try:
+                from six.moves.xmlrpc_server import SimpleXMLRPCServer
+            except ImportError:
+                from SimpleXMLRPCServer import SimpleXMLRPCServer
+
+            server = SimpleXMLRPCServer((bind, port), allow_none=True, logRequests=logRequests)
+            server.register_introspection_functions()
+            server.register_multicall_functions()
+
+            server.register_function(self.quit, '_quit')
+            #server.register_function(self.__len__, 'size')
+
+            def dump_counter(_time, _type):
+               try:
+                    return self._cnt[_time].to_dict(_type)
+               except :
+
+                    logger.exception("")
+
+            server.register_function(dump_counter, 'counter')
+
+            server.timeout = 0.5
+            while not self._quit:
+                server.handle_request()
+            server.server_close()
+
+    
 
     #def on_download(self, url, name):
