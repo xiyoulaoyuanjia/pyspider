@@ -42,8 +42,8 @@ jpg 基本信息如下:
 class ResultWorkerWatoo(ResultWorker):
     def __init__(self, resultdb, inqueue):
         super(ResultWorkerWatoo,self).__init__(resultdb,inqueue)
-        self.ftpClinet = self.ftpClinetInit();
-        self.pymssqlClinet = self.pymssqlClinetInit();
+#        self.ftpClinet = self.ftpClinetInit();
+#        self.pymssqlClinet = self.pymssqlClinetInit();
         self.data_path='./data'
         self._quit = False
         self._cnt = {

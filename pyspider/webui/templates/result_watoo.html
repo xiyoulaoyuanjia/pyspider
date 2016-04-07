@@ -28,6 +28,7 @@
         <thead>
           <tr>
             <th width="10%">project name</th>
+            <th width="10%">Details</th>
             <th>Results</th>
             <th></th>
             <th></th>
@@ -39,6 +40,7 @@
           {% for project in projects %}
           <tr data-name="{{ project['name'] }}">
             <td class="project-name"><a>{{ project['group'] or '' }}</a></td>
+            <td class ="project-actions"><a class="btn btn-default btn-xs" href="/results?project={{ project.name }}" target=_blank>Results</a></td>
             <td class="project-progress progress-1day">
               <div class="progress">
                 <div class="progress-text">1 day</div>
