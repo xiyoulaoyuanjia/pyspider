@@ -4,7 +4,7 @@
 # Author: xiyoulaoyuanjia
 # Created on 2015-12-07 22:56:19
 from pyspider.result import ResultWorker
-from pyspider.libs import counter, utils
+from pyspider.libs import counter, utils,AliOss
 import os
 
 import json
@@ -17,6 +17,7 @@ from ftplib import FTP
 import ftplib
 import pymssql
 logger = logging.getLogger("ResultWorkerWatoo")
+
 
 '''
 jpg 基本信息如下:
@@ -67,7 +68,7 @@ class ResultWorkerWatoo(ResultWorker):
                 lambda: counter.TimebaseAverageWindowCounter(10 * 60 * 7 * 30 * 12, 24 * 6)),
             "all": counter.CounterManager(
                 lambda: counter.TotalCounter()),
-        }   
+        }
         self._cnt['1h'].load(os.path.join(self.data_path, 'result_watoo.1h'))
         self._cnt['1day'].load(os.path.join(self.data_path, 'result_watoo.1day'))
         self._cnt['1week'].load(os.path.join(self.data_path, 'result_watoo.1week'))
@@ -76,6 +77,7 @@ class ResultWorkerWatoo(ResultWorker):
 
         self._cnt['all'].load(os.path.join(self.data_path, 'result_watoo.all'))
         self._last_dump_cnt = 0
+        self.aliyunOssPython = AliOss.AliyunOssPython()
 
 
     def  pymssqlClinetInit(self):
@@ -192,14 +194,15 @@ class ResultWorkerWatoo(ResultWorker):
         avg_color, pic_width, pic_height = self.__get_pic_inf(result['name'])
 
 
-        self.ftpClinetUpload(result['name'])
+        #self.ftpClinetUpload(result['name'])
+        self.aliyunOssPython.upload(result['name'])
 
         _now_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         _sql_name = time.strftime('%Y%m%d/') + result['name']
         _sql = "insert into Pic_Temp_Process(Pic_Name, Pic_Width,Pic_Height, AuditStatus, UpdatedDate,CreatedDate, UserReplyCount, Audit_ErrorIndex, AvgColor, OriginalName, SourceUrl) values('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s') " % (_sql_name, pic_width, pic_height, '0', _now_time, _now_time , '0', '0',avg_color, result['orginal_name'], result['source_url'].encode('utf-8'))
 
         self.pymssqlClinetOp(_sql)
-        self._on_new_request(task,result)        
+        self._on_new_request(task,result)
         ResultWorker.on_result(self, task, result)
 
     def quit(self):
@@ -234,6 +237,6 @@ class ResultWorkerWatoo(ResultWorker):
                 server.handle_request()
             server.server_close()
 
-    
+
 
     #def on_download(self, url, name):
